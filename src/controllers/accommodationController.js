@@ -1,8 +1,11 @@
 import Response from '../utils/response';
+import accommodationService from '../services/accommodationService';
 import { turnArray } from '../utils/isArray';
 
+/** Class that handles accommodation */
 class accommodationController {
   /**
+   * Creates new accommodation
    * @param {object} req - request object
    * @param {object} res - response object
    * @param {object} next - next middleware
@@ -55,7 +58,7 @@ class accommodationController {
   }
 
   /**
-   * get all accommodation
+   * Get all accommodation
    * @param {object} req - request object
    * @param {object} res - response object
    * @param {object} next - next middleware
