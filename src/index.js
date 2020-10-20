@@ -1,19 +1,24 @@
-import '@babel/polyfill';
+import "@babel/polyfill";
 import express from "express";
 import dotenv from "dotenv";
+import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
 import errorHandler from "errorhandler";
-import routes from './routes'
+import routes from "./routes";
 
 dotenv.config();
 const isProduction = process.env.NODE_ENV === "production";
 
 const app = express();
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 if (!isProduction) {
   app.use(errorHandler());
 }
 
-app.use(routes)
+app.use(routes);
 const PORT = process.env.PORT || 5000;
 
 if (!isProduction) {

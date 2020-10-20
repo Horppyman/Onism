@@ -1,19 +1,18 @@
 import express from "express";
-import Accommodation from '../../controllers/accommodationController'
-import method from '../../utils/method'
+import Accommodation from "../../controllers/accommodationController";
+import method from "../../utils/method";
 
 const router = express();
 
 router
-  .route('/')
-  .get(verify, Accommodation.getAccommodations)
-  .post(
-    verify,
-    Access.isAllowedUser,
-    accommodationValidation.validateAccommodation,
-    Accommodation.createAccommodation
-  )
+  .route("/")
+  .get(Accommodation.getAccommodations)
+  .post(Accommodation.createAccommodation)
   .all(method);
 
+router
+  .route("/rooms")
+  .post(Accommodation.createRoom)
+  .all(method);
 
 export default router;
