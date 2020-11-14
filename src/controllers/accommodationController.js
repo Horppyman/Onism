@@ -1,3 +1,5 @@
+import moment from 'moment';
+import { Op } from 'sequelize';
 import Response from "../utils/response";
 import accommodationService from "../services/accommodationService";
 import { turnArray } from "../utils/isArray";
@@ -105,6 +107,76 @@ class accommodationController {
         "Accommodations fetched successfully",
         data
       );
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  /**
+   * get most travelled destination(accommodation)
+   * @param {object} req - request object
+   * @param {object} res - response object
+   * @param {object} next - next middleware
+   * @returns {object} custom response
+   */
+  static async getMostTravelledDestination(req, res, next) {
+    try {
+      const final = [];
+      let data = [];
+      const requests = await requestService.findRequests({
+        status: "Approved",
+        travelDate: {
+          [Op.lt]: [moment().format("YYYY-MM-DD")],
+        },
+      });
+
+      const accommodationRequest = requests.map((elem) => elem.accommodations);
+      for (let i = 0; i < accommodationRequest.length; i += 1) {
+        data = data.concat(accommodationRequest[i]);
+      }
+      if (data.length === 0) {
+        return Response.customResponse(
+          res,
+          200,
+          "There are currently no past travels",
+          {
+            data: final,
+            count: 0,
+          }
+        );
+      }
+      const counter = {};
+      let maxCount = 1;
+      let mostTravelled = [];
+
+      for (let i = 0; i < data.length; i += 1) {
+        const { name } = data[i];
+
+        // eslint-disable-next-line no-unused-expressions
+        counter[name] === undefined
+          ? (counter[name] = 1)
+          : (counter[name] += 1);
+
+        if (counter[name] > maxCount) {
+          mostTravelled = [name];
+          maxCount = counter[name];
+        } else if (counter[name] === maxCount) {
+          mostTravelled.push(name);
+          maxCount = counter[name];
+        }
+      }
+      await Promise.all(
+        mostTravelled.map(async (elem) => {
+          const accommodation = await accommodationService.getAccommodation({
+            name: elem.toUpperCase(),
+          });
+          final.push(accommodation);
+        })
+      );
+      return Response.customResponse(res, 200, "Most travelled destination", {
+        data: final,
+        count: maxCount,
+      });
     } catch (error) {
       return next(error);
     }

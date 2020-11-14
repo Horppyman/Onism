@@ -10,9 +10,12 @@ router
   .post(Accommodation.createAccommodation)
   .all(method);
 
+router.route("/rooms")
+.post(Accommodation.createRoom)
+.all(method);
+
 router
-  .route("/rooms")
-  .post(Accommodation.createRoom)
-  .all(method);
+  .route("most-travelled-destination")
+  .get(Accommodation.getMostTravelledDestination);
 
 export default router;
