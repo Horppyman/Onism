@@ -1,6 +1,6 @@
-import Response from '../utils/response';
-import accommodationService from '../services/accommodationService';
-import { turnArray } from '../utils/isArray';
+import Response from "../utils/response";
+import accommodationService from "../services/accommodationService";
+import { turnArray } from "../utils/isArray";
 
 /** Class that handles accommodation */
 class accommodationController {
@@ -11,7 +11,7 @@ class accommodationController {
    * @param {object} next - next middleware
    * @returns {object} custom response
    */
-  static async createAccommodations(req, res, next) {
+  static async createAccommodation(req, res, next) {
     const {
       body: { locationId, name, lat, lng, amenities, services },
       user: { id },
@@ -51,6 +51,38 @@ class accommodationController {
         "201",
         "Accommodation created successfully",
         accommodation
+      );
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  /**
+   * Creates rooms for an accommodation
+   * @param {object} req - request object
+   * @param {object} res - response object
+   * @param {object} next - next middleware
+   * @returns {object} custom response
+   */
+  static async createRoom(req, res, next) {
+    try {
+      const { accommodationId, rooms } = req.body;
+      const exist = await accommodationService.getAccommodation({
+        id: accommodationId,
+      });
+      if (!exist) {
+        return Response.notFoundError(res, "Accommodation not found");
+      }
+      const data = rooms.map((r) => {
+        r.accommodationId = accommodationId;
+        return r;
+      });
+      const room = await accommodationService.createRoom(data);
+      return Response.customResponse(
+        res,
+        "201",
+        "Room created successfully",
+        room
       );
     } catch (error) {
       return next(error);
