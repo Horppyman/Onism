@@ -1,8 +1,9 @@
-import moment from 'moment';
-import { Op } from 'sequelize';
+import moment from "moment";
+import { Op } from "sequelize";
 import Response from "../utils/response";
 import accommodationService from "../services/accommodationService";
 import { turnArray } from "../utils/isArray";
+import reviewController from "./reviewController";
 
 /** Class that handles accommodation */
 class accommodationController {
@@ -106,6 +107,87 @@ class accommodationController {
         "200",
         "Accommodations fetched successfully",
         data
+      );
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  /**
+   * get accommodation by id
+   * @param {object} req - request object
+   * @param {object} res - response object
+   * @param {object} next - next middleware
+   * @returns {object} custom response
+   */
+  static async getAccommodationById(req, res, next) {
+    const id = parseInt(req.params.id, 10);
+    const { id: userId } = req.user;
+    try {
+      const exist = await accommodationService.getAccommodation({
+        id,
+      });
+      if (!exist) {
+        return Response.notFoundError(res, "Accommodation not found");
+      }
+      delete exist.dataValues.like;
+      delete exist.dataValues.requests;
+      exist.dataValues.rating = reviewController.getAccommodationRating(
+        exist,
+        userId
+      );
+      return Response.customResponse(
+        res,
+        "200",
+        "Accommodation fetched successfully",
+        exist
+      );
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  /**
+   * like or unlike an accommodation
+   * @param {object} req - request object
+   * @param {object} res - response object
+   * @param {object} next - next middleware
+   * @returns {object} custom response
+   */
+  static async likeOrUnlike(req, res, next) {
+    const {
+      user: { id: userId },
+      params: { id: accommodationId },
+    } = req;
+    try {
+      const exist = await accommodationService.getAccommodation({
+        id: accommodationId,
+      });
+      if (!exist) {
+        return Response.notFoundError(res, "Enter a valid accommodation ID");
+      }
+      const like = { userId, accommodationId };
+      const alreadyLiked = await likeService.countLikes(like);
+      const likes = await likeService.countLikes({ accommodationId });
+      if (!alreadyLiked) {
+        await likeService.like(like);
+        return Response.customResponse(
+          res,
+          200,
+          `Successfully liked ${exist.name}`,
+          {
+            likes: likes + 1,
+          }
+        );
+      }
+      await likeService.unlike(like);
+      return Response.customResponse(
+        res,
+        200,
+        `Successfully unliked ${exist.name}`,
+        {
+          likes: likes - 1,
+        }
       );
     } catch (error) {
       return next(error);

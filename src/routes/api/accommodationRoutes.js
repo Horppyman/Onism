@@ -18,4 +18,10 @@ router
   .route("most-travelled-destination")
   .get(Accommodation.getMostTravelledDestination);
 
+router
+  .route('/:id')
+  .get(Accommodation.getAccommodationById)
+  .all(method);
+  
+router.route('/:id/like').patch(Accommodation.likeOrUnlike).all(method);
 export default router;
