@@ -4,6 +4,7 @@ import Review from "../../controllers/reviewController";
 import method from "../../utils/method";
 import accommodationValidation from "../../validation/accommodationValidation";
 import feedbackValidation from "../../validation/feedbackValidation";
+import ratingValidation from "../../validation/ratingValidation";
 
 const router = express();
 
@@ -46,4 +47,9 @@ router
   .post(feedbackValidation.validateFeedbackData, Review.addedFeedback)
   .all(method);
 
-export default router;
+router
+  .route("/:id/ratings")
+  .post(ratingValidation.validateRatingData, Review.rateCenter)
+  .all(method);
+
+  export default router;
