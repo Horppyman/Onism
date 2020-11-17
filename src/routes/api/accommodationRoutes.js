@@ -5,6 +5,7 @@ import method from "../../utils/method";
 import accommodationValidation from "../../validation/accommodationValidation";
 import feedbackValidation from "../../validation/feedbackValidation";
 import ratingValidation from "../../validation/ratingValidation";
+import Access from "../../middlewares/userRoles";
 import verify from "../../middlewares/auth";
 
 const router = express();
@@ -14,6 +15,7 @@ router
   .get(verify, Accommodation.getAccommodations)
   .post(
     verify,
+    Access.isAllowedUser,
     accommodationValidation.validateAccommodation,
     Accommodation.createAccommodation
   )
@@ -23,6 +25,7 @@ router
   .route("/rooms")
   .post(
     verify,
+    Access.isAllowedUser,
     accommodationValidation.validateRoomData,
     Accommodation.createRoom
   )
