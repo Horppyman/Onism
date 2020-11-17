@@ -5,13 +5,15 @@ import method from "../../utils/method";
 import accommodationValidation from "../../validation/accommodationValidation";
 import feedbackValidation from "../../validation/feedbackValidation";
 import ratingValidation from "../../validation/ratingValidation";
+import verify from "../../middlewares/auth";
 
 const router = express();
 
 router
   .route("/")
-  .get(Accommodation.getAccommodations)
+  .get(verify, Accommodation.getAccommodations)
   .post(
+    verify,
     accommodationValidation.validateAccommodation,
     Accommodation.createAccommodation
   )
@@ -19,16 +21,21 @@ router
 
 router
   .route("/rooms")
-  .post(accommodationValidation.validateRoomData, Accommodation.createRoom)
+  .post(
+    verify,
+    accommodationValidation.validateRoomData,
+    Accommodation.createRoom
+  )
   .all(method);
 
 router
   .route("most-travelled-destination")
-  .get(Accommodation.getMostTravelledDestination);
+  .get(verify, Accommodation.getMostTravelledDestination);
 
 router
   .route("/:id")
   .get(
+    verify,
     accommodationValidation.validateGetOneAccommodation,
     Accommodation.getAccommodationById
   )
@@ -37,6 +44,7 @@ router
 router
   .route("/:id/like")
   .patch(
+    verify,
     accommodationValidation.validateGetOneAccommodation,
     Accommodation.likeOrUnlike
   )
@@ -44,12 +52,12 @@ router
 
 router
   .route("/:id/feedback")
-  .post(feedbackValidation.validateFeedbackData, Review.addedFeedback)
+  .post(verify, feedbackValidation.validateFeedbackData, Review.addedFeedback)
   .all(method);
 
 router
   .route("/:id/ratings")
-  .post(ratingValidation.validateRatingData, Review.rateCenter)
+  .post(verify, ratingValidation.validateRatingData, Review.rateCenter)
   .all(method);
 
-  export default router;
+export default router;
