@@ -16,7 +16,7 @@ if (process.env.NODE_ENV !== 'test' || process.env.NODE_ENV !== 'localTest') {
   GoogleStrategy = MockPass.OAuth2Strategy;
 }
 
-const getProfile = (accessToken, refreshToken, profile, done) {
+const getProfile = (accessToken, refreshToken, profile, done) => {
     try {
         const firstName = profile._json.first_name || profile._json.given_name;
         const lastName = profile._json.last_name || profile._json.family_name;
