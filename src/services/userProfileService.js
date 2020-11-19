@@ -3,7 +3,6 @@ import database from "../database/models";
 const { UserProfile, Users, ProfilePictures } = database;
 
 /** Class that handles user profile service */
-
 class UserProfileService {
   /**
    * Creates or updates user profile
@@ -44,4 +43,41 @@ class UserProfileService {
       throw error;
     }
   }
+
+  /**
+   * creates or updates user profile picture
+   * @param {number} userId - user id
+   * @param {object} data - profile picture data
+   * @returns {object} updated profile picture
+   */
+  static async updateOrCreatePicture(userId, data) {
+    try {
+      const profileFound = await ProfilePictures.findOne({ where: { userId } });
+      if (!profileFound) await ProfilePictures.create({ userId });
+      const updatedProfile = await ProfilePictures.update(data, {
+        where: { userId },
+        returning: true,
+      });
+      return updatedProfile;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * gets user profile picture
+   * @param {number} userId - user id
+   * @returns {object} profile picture
+   */
+  static async getPicture(userId) {
+    try {
+      return await ProfilePictures.findOne({
+        where: { userId },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
 }
+
+export default UserProfileService;
