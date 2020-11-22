@@ -17,4 +17,7 @@ router
   .post(userValidation.validateSignup, Users.createUser)
   .all(method);
 
-router.route("/signin").post(userValidation.validateSignin).all(method);
+router
+  .route("/signin")
+  .post(userValidation.validateSignin, Users.login)
+  .all(method);
