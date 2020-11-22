@@ -21,3 +21,5 @@ router
   .route("/signin")
   .post(userValidation.validateSignin, Users.login)
   .all(method);
+
+router.route("/signout").post(verify, Users.logout).all(method);

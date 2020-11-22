@@ -121,6 +121,18 @@ class Users {
       return next(error);
     }
   }
+
+  /**
+   * logs out a user
+   * @param {object} req - request object
+   * @param {object} res - response object
+   * @returns {object} response
+   */
+  async logout(req, res) {
+    SessionManager.destroyToken(req.user);
+
+    return Response.customResponse(res, 200, "User logged out successfully");
+  }
 }
 
 export default new Users();
