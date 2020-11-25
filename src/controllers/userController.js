@@ -133,6 +133,91 @@ class Users {
 
     return Response.customResponse(res, 200, "User logged out successfully");
   }
+
+  /**
+   * login a user via social account
+   * @param {object} req - response object
+   * @param {object} res -response object
+   * @returns {string} redirect url
+   */
+  async socialLogin(req, res) {
+    const { firstName, lastName, email: userEmail } = req.user;
+    let data;
+    data = await UserService.findUser({ userEmail });
+    if (!data) {
+      data = await UserService.createUser({
+        firstName,
+        lastName,
+        userEmail,
+      });
+    }
+    const token = await SessionManager.createSession({
+      id: data.id,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      userEmail: data.userEmail,
+      userRoles: data.userRoles,
+      emailAllowed: data.emailAllowed,
+    });
+    const apiResponse = {
+      status: 200,
+      message: "Successfully logged in",
+      data: token,
+    };
+    await Emitter.emit("new-user", data);
+    const responseBuffer = Buffer.from(JSON.stringify(apiResponse));
+    return res.redirect(
+      `${FRONTEND_URL}/login?code=${responseBuffer.toString("base64")}`
+    );
+  }
+
+  /**
+   * check the user token
+   * @param {object} req - request object
+   * @param {object} res - response object
+   * @param {object} next - next middleware
+   * @returns {object} custom response
+   */
+  async checkToken(req, res, next) {
+    try {
+      return Response.customResponse(res, 200, "current user", req.user);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  /**
+   * verifies email
+   * @param {object} req - request object
+   * @param {object} res - response object
+   * @param {object} next - next middleware
+   * @returns {object} custom response
+   */
+  async verify(req, res, next) {
+    const { token } = req.query;
+
+    try {
+      const { userEmail } = await SessionManager.verifyToken(token);
+      const user = await UserService.findUser({ userEmail });
+      if (user.accountVerified) {
+        return Response.conflictError(res, "Email already verified");
+      }
+      await UserService.updateUser({ userEmail }, { accountVerified: true });
+      const userExists = user.dataValues;
+      userExists.accountVerified = true;
+      const userToken = await SessionManager.createSession(userExists, res);
+      return Response.customResponse(res, 201, "Email verified successfully", {
+        userEmail,
+        userToken,
+      });
+    } catch (error) {
+      return next({
+        message: "error.message",
+        stack: error.stack,
+        status: 401,
+      });
+    }
+  }
 }
 
 export default new Users();

@@ -23,3 +23,35 @@ router
   .all(method);
 
 router.route("/signout").post(verify, Users.logout).all(method);
+
+router.route("/facebook").get(
+  passport.authenticate("facebook", {
+    scope: ["email"],
+  })
+);
+
+router
+  .route("/facebook/redirect")
+  .get(passport.authenticate("facebook"), Users.socialLogin)
+  .all(method);
+
+router.route("/google").get(
+  passport.authenticate("google", {
+    scope: [
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "https://www.googleapis.com/auth/userinfo.email",
+    ],
+  })
+);
+
+router
+  .route("/google/redirect")
+  .get(passport.authenticate("google"), Users.socialLogin)
+  .all(method);
+
+router.route("/check-user").get(verify, Users.checkToken).all(method);
+
+router
+  .route("/create-link")
+  .post(userValidation.validateVerifyLink, Users.verify)
+  .all(method);
