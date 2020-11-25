@@ -53,5 +53,17 @@ router.route("/check-user").get(verify, Users.checkToken).all(method);
 
 router
   .route("/create-link")
-  .post(userValidation.validateVerifyLink, Users.verify)
+  .post(userValidation.validateSendLink, Users.sendLink)
+  .all(method);
+
+router
+  .route("/verify")
+  .patch(userValidation.validateVerifyLink, Users.verify)
+  .all(method);
+
+router.route("/forgot-password").post(Users.requestPasswordReset).all(method);
+
+router
+  .route("/reset-password/:userId/:token")
+  .put(userValidation.resetPassword, Users.resetPassword)
   .all(method);

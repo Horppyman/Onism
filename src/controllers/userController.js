@@ -187,6 +187,47 @@ class Users {
   }
 
   /**
+   * sends verification link
+   * @param {object} req - request object
+   * @param {object} res - response object
+   * @param {object} next - next middleware
+   * @returns {object} custom response
+   */
+  async sendLink(req, res, next) {
+    const { userEmail } = req.body;
+    const user = await UserService.findUser({ userEmail });
+    if (!user) {
+      return Response.notFoundError(res, "This email is not registered");
+    }
+
+    const token = SessionManager.generateToken(user);
+    const link = `${FRONTEND_URL}/verify/?token=${token}`;
+    try {
+      const headers = Email.header({
+        to: userEmail,
+        subject: "Onism email verification link",
+      });
+      const msg = VerifyEmail.verificationLinkTemplate(link, user);
+      await Email.sendMail(res, headers, msg);
+      return Response.customResponse(
+        res,
+        200,
+        "email sent with verification link",
+        {
+          userEmail,
+          link,
+        }
+      );
+    } catch (error) {
+      return next({
+        message: "error.message",
+        stack: error.stack,
+        status: 401,
+      });
+    }
+  }
+
+  /**
    * verifies email
    * @param {object} req - request object
    * @param {object} res - response object
@@ -216,6 +257,81 @@ class Users {
         stack: error.stack,
         status: 401,
       });
+    }
+  }
+
+  /**
+   * sends password reset email
+   * @param {object} req - request object
+   * @param {object} res - response object
+   * @param {object} next - next middleware
+   * @returns {object} custom response
+   */
+  async requestPasswordReset(req, res, next) {
+    const { email: userEmail } = req.body;
+    try {
+      const userAccount = await UserService.findUser({ userEmail });
+      if (!userAccount) {
+        return Response.notFoundError(res, "Account not found");
+      }
+      const oneTimeToken = SessionManager.generateToken({
+        id: userAccount.id,
+        secret: `${userAccount.userPassword}-${userAccount.createdAt}`,
+      });
+      const url = `${FRONTEND_URL}/reset-password/${userAccount.id}/${oneTimeToken}`;
+      const headers = Email.header({
+        to: userAccount.userEmail,
+        subject: "Onism Password Reset",
+      });
+      const msg = ResetPasswordEmail.resetTemplate(url, userAccount);
+      await Email.sendMail(res, headers, msg);
+      return Response.customResponse(
+        res,
+        200,
+        "If email is found, check your email for the link",
+        url
+      );
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  /**
+   * resets user password
+   * @param {object} req - request object
+   * @param {object} res - response object
+   * @param {object} next - next middleware
+   * @returns {object} custom response
+   */
+  async resetPassword(req, res, next) {
+    const { password, newPassword } = req.body;
+    const { userId, token } = req.params;
+    const id = parseInt(userId, 10);
+    try {
+      const userAccount = await UserService.findUser({ id });
+      if (!userAccount) {
+        return Response.authenticationError(res, "Forbidden Request");
+      }
+      const userDetails = await SessionManager.decodeToken({
+        token,
+        secret: `${userAccount.userPassword}-${userAccount.createdAt}`,
+      });
+      if (password !== newPassword) {
+        return Response.badRequestError(
+          res,
+          "Passwords do not match, re-type password"
+        );
+      }
+      const pass = new Password({ userPassword: password });
+      const userPassword = await pass.encryptPassword();
+      await UserService.updateUser({ id: userDetails.id }, { userPassword });
+      return Response.customResponse(
+        res,
+        200,
+        "Password has been successfully changed. Proceed to login"
+      );
+    } catch (error) {
+      return next(error);
     }
   }
 }
