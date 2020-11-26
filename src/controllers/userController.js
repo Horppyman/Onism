@@ -334,6 +334,67 @@ class Users {
       return next(error);
     }
   }
+
+  /**
+   * updates user role
+   * @param {object} req - request object
+   * @param {object} res - response object
+   * @param {object} next - next middleware
+   * @returns {object} custom response
+   */
+  async updateUserRole(req, res, next) {
+    const { userEmail, userRole } = req.body;
+    let message;
+    try {
+      const details = await UserService.findUser({ userEmail });
+      if (!details) {
+        return Response.notFoundError(res, "User doesn't exist");
+      }
+
+      if (details.userRoles === "Super Administrator") {
+        return Response.badRequestError(
+          res,
+          "What you're trying to do cannot be achieved"
+        );
+      }
+
+      if (userRole !== details.userRoles) {
+        if (userRole === "Manager") {
+          const roleDetails = await UserService.findUser({
+            userRoles: userRole,
+          });
+          if (!roleDetails) {
+            message = "User Role has been successfully updated";
+            await UserService.updateUser(
+              { userEmail },
+              { userRoles: userRole }
+            );
+            return Response.customResponse(res, 200, message);
+          }
+
+          await UserService.updateUser(
+            { userEmail: roleDetails.userEmail },
+            { userRoles: "Requester" }
+          );
+          await UserService.updateUser({ userEmail }, { userRoles: userRole });
+          message = `${roleDetails.firstName} ${roleDetails.lastName}'s role has been updated to Requester and the new manager role has been assigned to ${userEmail}`;
+          return Response.customResponse(res, 200, message);
+        }
+
+        await UserService.updateUser({ userEmail }, { userRoles: userRole });
+        return Response.customResponse(
+          res,
+          200,
+          "Role has been updated successfully"
+        );
+      }
+
+      message = "The user already has the rights you are trying to assign";
+      return Response.conflictError(res, message);
+    } catch (error) {
+      return next(error);
+    }
+  }
 }
 
 export default new Users();

@@ -67,3 +67,13 @@ router
   .route("/reset-password/:userId/:token")
   .put(userValidation.resetPassword, Users.resetPassword)
   .all(method);
+
+router
+  .route("/update-role")
+  .put(
+    userValidation.validateUserRole,
+    verify,
+    Access.isAdmin,
+    Users.updateUserRole
+  )
+  .all(method);
