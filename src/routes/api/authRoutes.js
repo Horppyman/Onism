@@ -82,3 +82,18 @@ router
   .route("/add-user")
   .post(verify, userValidation.userByAdmin, Access.isAdmin, Users.addSupplier)
   .all(method);
+
+router
+  .route("/email-preferences")
+  .patch(verify, Users.emailPreferences)
+  .all(method);
+
+router
+  .route("/autofill-preferences")
+  .patch(verify, Users.switchAutofill)
+  .all(method);
+
+router
+  .route("/unsubscribe")
+  .patch(userValidation.validateUnsubscribe, Users.unsubscribe)
+  .all(method);

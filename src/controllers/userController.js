@@ -395,22 +395,22 @@ class Users {
       return next(error);
     }
   }
-  
+
   /**
    * adds a supplier
    * @param {param} req - request object
    * @param {param} res - response object
    * @param {param} next - next middleware
    * @returns {object} custom response
-   */ 
+   */
   async addSupplier(req, res, next) {
     const { userEmail, firstName, lastName } = req.body;
     try {
       const user = await UserService.findUser({
-        userEmail
+        userEmail,
       });
       if (user) {
-        return Response.conflictError(res, 'User already exists');
+        return Response.conflictError(res, "User already exists");
       }
       const userPassword = Password.randomPassword();
       const obj = new Password({ userPassword });
@@ -420,8 +420,8 @@ class Users {
         lastName,
         userEmail,
         userPassword: password,
-        userRoles: 'Accommodation Supplier',
-        accountVerified: true
+        userRoles: "Accommodation Supplier",
+        accountVerified: true,
       };
       const data = await UserService.createUser(supplier);
       delete data.dataValues.accountVerified;
@@ -429,14 +429,14 @@ class Users {
       delete data.dataValues.updatedAt;
       const headers = Email.header({
         to: userEmail,
-        subject: 'BareFoot Accommodations'
+        subject: "BareFoot Accommodations",
       });
       const loginLink = `${FRONTEND_URL}/log-in`;
       const msg = SupplierEmail.supplierTemplate(
         {
           userEmail,
           firstName,
-          password: userPassword
+          password: userPassword,
         },
         loginLink
       );
@@ -444,13 +444,96 @@ class Users {
       return Response.customResponse(
         res,
         201,
-        'Account has been created successfully',
+        "Account has been created successfully",
         { ...data.dataValues }
       );
     } catch (error) {
       return next(error);
     }
-  }  async addSupplier(re)
+  }
+
+  /**
+   * change email notification preferences
+   * @param {object} req - request object
+   * @param {object} res - response object
+   * @param {object} next - next middleware
+   * @returns {object} custom response
+   */
+  async emailPreferences(req, res, next) {
+    try {
+      const { id, emailAllowed } = req.user;
+      const data = await UserService.updateUser(
+        { id },
+        { emailAllowed: !emailAllowed }
+      );
+      return Response.customResponse(
+        res,
+        200,
+        "Your email preferences have been successfully updated",
+        { emailAllowed: data[1][0].emailAllowed }
+      );
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  /**
+   * switchAutofill option
+   * @param {object} req - request object
+   * @param {object} res - response object
+   * @param {object} next - next middleware
+   * @returns {object} custom response
+   */
+  async switchAutofill(req, res, next) {
+    try {
+      const { id, requestAutofill } = req.user;
+      const data = await UserService.updateUser(
+        { id },
+        { requestAutofill: !requestAutofill }
+      );
+      return Response.customResponse(
+        res,
+        200,
+        "Your request autofill preference has been successfully updated",
+        { requestAutofill: data[1][0].requestAutofill }
+      );
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  /**
+   * Unsubscribe from email notifications
+   * @param {object} req - request object
+   * @param {object} res - response object
+   * @param {object} next - next middleware
+   * @returns {object} custom response
+   */
+  async unsubscribe(req, res, next) {
+    try {
+      const { token } = req.query;
+      const { userEmail } = await SessionManager.verifyToken(token);
+      const user = await UserService.findUser({ userEmail });
+      if (!user.emailAllowed) {
+        return Response.conflictError(
+          res,
+          "You're already opted out of email notifications"
+        );
+      }
+      const data = await UserService.updateUser(
+        { userEmail },
+        { emailAllowed: false }
+      );
+      return Response.customResponse(
+        res,
+        200,
+        "You've opted out of email notifications successfully",
+        { emailAllowed: data[1][0].emailAllowed }
+      );
+    } catch (error) {
+      return next(error);
+    }
+  }
 }
 
 export default new Users();
