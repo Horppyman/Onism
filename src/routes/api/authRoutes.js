@@ -77,3 +77,8 @@ router
     Users.updateUserRole
   )
   .all(method);
+
+router
+  .route("/add-user")
+  .post(verify, userValidation.userByAdmin, Access.isAdmin, Users.addSupplier)
+  .all(method);

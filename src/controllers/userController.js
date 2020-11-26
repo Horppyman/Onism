@@ -395,6 +395,62 @@ class Users {
       return next(error);
     }
   }
+  
+  /**
+   * adds a supplier
+   * @param {param} req - request object
+   * @param {param} res - response object
+   * @param {param} next - next middleware
+   * @returns {object} custom response
+   */ 
+  async addSupplier(req, res, next) {
+    const { userEmail, firstName, lastName } = req.body;
+    try {
+      const user = await UserService.findUser({
+        userEmail
+      });
+      if (user) {
+        return Response.conflictError(res, 'User already exists');
+      }
+      const userPassword = Password.randomPassword();
+      const obj = new Password({ userPassword });
+      const password = await obj.encryptPassword();
+      const supplier = {
+        firstName,
+        lastName,
+        userEmail,
+        userPassword: password,
+        userRoles: 'Accommodation Supplier',
+        accountVerified: true
+      };
+      const data = await UserService.createUser(supplier);
+      delete data.dataValues.accountVerified;
+      delete data.dataValues.createdAt;
+      delete data.dataValues.updatedAt;
+      const headers = Email.header({
+        to: userEmail,
+        subject: 'BareFoot Accommodations'
+      });
+      const loginLink = `${FRONTEND_URL}/log-in`;
+      const msg = SupplierEmail.supplierTemplate(
+        {
+          userEmail,
+          firstName,
+          password: userPassword
+        },
+        loginLink
+      );
+      await Email.sendMail(res, headers, msg);
+      return Response.customResponse(
+        res,
+        201,
+        'Account has been created successfully',
+        { ...data.dataValues }
+      );
+    } catch (error) {
+      return next(error);
+    }
+  }  async addSupplier(re)
 }
 
 export default new Users();
