@@ -8,12 +8,14 @@ const router = express.Router();
 
 router.use(fileUpload({ useTempFiles: true }));
 
-router.route("/").patch(verify, UserProfileValidation.checkUpdate, UserProfile.updateProfile);
+router
+  .route("/")
+  .patch(verify, UserProfileValidation.checkUpdate, UserProfile.updateProfile);
 
 router.route("/").get(verify, UserProfile.userProfile);
 
-router.route("/picture").patch(verify);
+router.route("/picture").patch(verify, UserProfile.updatePicture);
 
-router.route("/picture").get(verify);
+router.route("/picture").get(verify, UserProfile.getPicture);
 
 export default router;

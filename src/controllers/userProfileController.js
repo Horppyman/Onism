@@ -44,6 +44,57 @@ class UserProfileController {
       next(error);
     }
   }
+
+  /**
+   *  Update a users profile picture
+   * @param {object} req - request object
+   * @param {object} res - response object
+   * @param {object} next - next middleware
+   * @returns {object} custom response
+   */
+  async updatePicture(req, res, next) {
+    try {
+      const { image } = req.files;
+      const cloudFile = await upload(image.tempFilePath);
+      req.body.url = cloudFile.url;
+      const { id: userId } = req.user;
+      const response = await UserProfileService.updateOrCreatePicture(
+        userId,
+        req.body
+      );
+      return Response.customResponse(
+        res,
+        200,
+        "Profile Picture Updated",
+        response[1][0]
+      );
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  /**
+   *  Gets a users profile picture
+   * @param {object} req - request object
+   * @param {object} res - response object
+   * @param {object} next - next middleware
+   * @returns {object} custom response
+   */
+  async getPicture(req, res, next) {
+    try {
+      const { id: userId } = req.user;
+      const response = await UserProfileService.getPicture(userId);
+
+      return Response.customResponse(
+        res,
+        200,
+        "Profile Picture Retrieved",
+        response
+      );
+    } catch (error) {
+      return next(error);
+    }
+  }
 }
 
 export default new UserProfileController();
