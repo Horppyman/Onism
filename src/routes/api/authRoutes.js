@@ -97,3 +97,5 @@ router
   .route("/unsubscribe")
   .patch(userValidation.validateUnsubscribe, Users.unsubscribe)
   .all(method);
+
+export default router;
