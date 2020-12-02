@@ -25,3 +25,5 @@ router
   .route("/cancel/:id")
   .post(verify, BookingValidator.cancel, BookingController.cancelBooking)
   .all(method);
+
+export default router;
