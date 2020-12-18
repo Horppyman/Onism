@@ -1,0 +1,54 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Onism",
+    "description": "Make company global travel and accommodation easy and convenient for the strong workforce of the savvy members of staff of Onism Group, by leveraging the modern web."
+  },
+  "basePath": "/api/v1/",
+  "schemes": ["https", "http"],
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000/api/v1"
+    },
+    {
+      "url": "#"
+    }
+  ],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "tags": [
+    {
+      "name": "User",
+      "description": "User Endpoints"
+    },
+    {
+      "name": "User Profile",
+      "description": "User Profile Endpoints"
+    },
+    {
+      "name": "Accommodation",
+      "description": "Accommodation Endpoints"
+    },
+    {
+      "name": "Location",
+      "description": "Location Endpoints"
+    },
+    {
+      "name": "Booking",
+      "description": "Booking Endpoints"
+    },
+    {
+      "name": "Requests",
+      "description": "Request Endpoints"
+    }
+  ],
+  "paths": {}
+}
